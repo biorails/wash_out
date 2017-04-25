@@ -78,13 +78,27 @@ module WashOutHelper
           if elems.any?
             xml.tag! "xsd:sequence" do
               elems.each do |value|
-                xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+                if value.multiplied
+                  xml.tag! "xsd:element", :nillable => 'true', :name => value.name, :type => "#{value.namespaced_type}_array"
+                else
+                  xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+                end
               end
             end
           end
 
           attrs.each do |value|
             xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+          end
+        end
+        #
+        # .Net soap helper type for array of type
+        #
+        xml.tag! "xsd:complexType", :name => "#{param.basic_type}_array" do
+          xml.tag! "xsd:complexContent" do
+            xml.tag! "xsd:restriction", base:"soapenc:Array" do
+              xml.tag! "xsd:attribute", "ref" => "soapenc:arrayType",  "wsdl:arrayType"=>"#{param.basic_type}[]"
+            end
           end
         end
 
