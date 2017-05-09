@@ -2,14 +2,14 @@ module WashOutHelper
 
   def wsdl_data_options(param)
     case controller.soap_config.wsdl_style
-    when 'rpc'
-      if param.map.present? || !param.value.nil?
-        { :"xsi:type" => param.namespaced_type }
-      else
-        { :"xsi:nil" => true }
-      end
-    when 'document'
-      { }
+      when 'rpc'
+        if param.map.present? || !param.value.nil?
+          {:"xsi:type" => param.namespaced_type}
+        else
+          {:"xsi:nil" => true}
+        end
+      when 'document'
+        {}
     end
   end
 
@@ -33,13 +33,16 @@ module WashOutHelper
 
       if param.struct?
         if param.multiplied
-          param.map.each do |p|
-            attrs = wsdl_data_attrs p
-            if p.is_a?(Array) || p.map.size > attrs.size
-              blk = proc { wsdl_data(xml, p.map) }
+          xml.tag! "#{param.name}_array" do
+
+            param.map.each do |p|
+              attrs = wsdl_data_attrs p
+              if p.is_a?(Array) || p.map.size > attrs.size
+                blk = proc { wsdl_data(xml, p.map) }
+              end
+              attrs.reject! { |_, v| v.nil? }
+              xml.tag! tag_name, param_options.merge(attrs), &blk #todo add array level object
             end
-            attrs.reject! { |_, v| v.nil? }
-            xml.tag! tag_name, param_options.merge(attrs), &blk
           end
         else
           xml.tag! tag_name, param_options do
@@ -49,8 +52,10 @@ module WashOutHelper
       else
         if param.multiplied
           param.value = [] unless param.value.is_a?(Array)
-          param.value.each do |v|
-            xml.tag! tag_name, v, param_options
+          xml.tag! "#{param.name}_array" do
+            param.value.each do |v|
+              xml.tag! tag_name, v, param_options
+            end
           end
         else
           xml.tag! tag_name, param.value, param_options
@@ -58,6 +63,7 @@ module WashOutHelper
       end
     end
   end
+
 
   def wsdl_type(xml, param, defined=[])
     more = []
