@@ -103,13 +103,18 @@ describe WashOut do
     end
 
     it "defines arrays" do
-      x = xml[:definitions][:types][:schema][:complex_type].
-        find { |x| x[:'@name'] == 'Center' }[:sequence][:element].
-        find { |x| x[:'@name'] == 'X' }
-
-      expect(x[:'@min_occurs']).to eq "0"
+      x = xml[:definitions][:types][:schema][:complex_type]
+      expect(x).not_to be_nil  # "missing complex type"
+      x = x.select{ |x|x[:'@name'] == 'tns:Center_array'}
+      expect(x).not_to be_nil  # "missing 'tns:Center_array' "
+      x = x.first[:complex_content]
+      expect(x).not_to be_nil  # "missing complex type "
+      x = x[:restriction]
+      expect(x).not_to be_nil  # "restriction"
+      x = x[:attribute]
+      expect(x).not_to be_nil  # "missing complex array items"
+      expect(x[:'@wsdl:type']).to eq "tns:Center[]"
       expect(x[:'@max_occurs']).to eq "unbounded"
-      expect(x[:'@nillable']).to eq "true"
     end
 
     it "adds nillable to all type definitions" do

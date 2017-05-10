@@ -67,55 +67,76 @@ module WashOutHelper
 
   def wsdl_type(xml, param, defined=[])
     more = []
-
     if param.struct?
       if !defined.include?(param.basic_type)
-        xml.tag! "xsd:complexType", :name => param.basic_type do
-          attrs, elems = [], []
-          param.map.each do |value|
-            more << value if value.struct?
-            if value.attribute?
-              attrs << value
-            else
-              elems << value
-            end
-          end
-
-          if elems.any?
-            xml.tag! "xsd:sequence" do
-              elems.each do |value|
-                if value.multiplied
-                  xml.tag! "xsd:element", :nillable => 'true', :name => value.name, :type => "#{value.namespaced_type}_array"
-                else
-                  xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
-                end
-              end
-            end
-          end
-
-          attrs.each do |value|
-            xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
-          end
-        end
-        #
-        # .Net soap helper type for array of type
-        #
-        xml.tag! "xsd:complexType", :name => "#{param.basic_type}_array" do
-          xml.tag! "xsd:complexContent" do
-            xml.tag! "xsd:restriction", base:"soapenc:Array" do
-              xml.tag! "xsd:attribute", "ref" => "soapenc:arrayType",  "wsdl:arrayType"=>"#{param.basic_type}[]"
-            end
-          end
-        end
-
+        wsdl_basic_type(xml, param, defined)
+        wsdl_array_type(xml, param)
         defined << param.basic_type
       elsif !param.classified?
         raise RuntimeError, "Duplicate use of `#{param.basic_type}` type name. Consider using classified types."
       end
     end
+  end
 
+  private
+  #
+  # .Net soap helper type for array of type
+  #
+  def wsdl_array_of(xml, param)
+    xml.tag! "xsd:element", :nillable => 'true', :name => param.name, :type => "#{param.namespaced_type}_array"
+  end
+
+  def wsdl_basic_type(xml, param, defined)
+    more = []
+    xml.tag! "xsd:complexType", :name => param.basic_type do
+      attrs, elems = [], []
+      param.map.each do |value|
+        more << value if value.struct?
+        if value.attribute?
+          attrs << value
+        else
+          elems << value
+        end
+      end
+      if elems.any?
+        xml.tag! "xsd:sequence" do
+          elems.each do |value|
+            if value.multiplied
+              wsdl_array_of(xml, param)
+            else
+              xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+            end
+          end
+        end
+      end
+      attrs.each do |value|
+        xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+      end
+    end
     more.each do |p|
       wsdl_type xml, p, defined
+    end
+  end
+
+=begin
+<xsd:complexType name="SoapApi..BiorailsRequestServiceArray">
+ <xsd:complexContent>
+  <xsd:restriction base="soapenc:Array">
+   <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="typens:SoapApi..BiorailsRequestService[]"/>
+  </xsd:restriction>
+ </xsd:complexContent>
+</xsd:complexType>
+=end
+
+  def wsdl_array_type(xml, param)
+    xml.tag! "xsd:complexType", :name => param.array_type do
+      xml.tag! "xsd:complexContent" do
+        xml.tag! "xsd:restriction", base: "soap-enc:Array" do
+          xml.tag! "xsd:attribute", {"name" => "item",
+                                     "maxOccurs" => 'unbounded',
+                                     "wsdl:type" => "tns:#{param.basic_type}[]"}
+        end
+      end
     end
   end
 
@@ -127,4 +148,5 @@ module WashOutHelper
     end
     extend_with.merge(data)
   end
+
 end

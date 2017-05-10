@@ -13,7 +13,7 @@ module WashOut
     # The type specifier format is described in #parse_def.
     def initialize(soap_config, name, type, multiplied = false)
       type ||= {}
-      @soap_config = soap_config
+      @soap_config = soap_config || WashOut::SoapConfig.new({})
       @name       = name.to_s
       @raw_name   = name.to_s
       @map        = {}
@@ -103,6 +103,14 @@ module WashOut
     def basic_type
       return name unless classified?
       return source_class.wash_out_param_name(@soap_config)
+    end
+
+    def array_type
+      if soap_config.camelize_wsdl
+        "#{basic_type}Array"
+      else
+        "#{basic_type}_array"
+      end
     end
 
     def xsd_type

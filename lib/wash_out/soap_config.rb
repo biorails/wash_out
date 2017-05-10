@@ -11,6 +11,8 @@ module WashOut
       wsdl_style: 'rpc',
       snakecase_input: false,
       camelize_wsdl: false,
+      flatten_ruby_namespace: false,
+      dot_net_arrays: true,
       catch_xml_errors: false,
       wsse_username: nil,
       wsse_password: nil,
