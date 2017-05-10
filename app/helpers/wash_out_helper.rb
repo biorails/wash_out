@@ -83,7 +83,7 @@ module WashOutHelper
   # .Net soap helper type for array of type
   #
   def wsdl_array_of(xml, param)
-    xml.tag! "xsd:element", :nillable => 'true', :name => param.name, :type => "#{param.namespaced_type}_array"
+    xml.tag! "xsd:element", :nillable => 'true', :name => param.name, :type =>  param.array_type
   end
 
   def wsdl_basic_type(xml, param, defined)
@@ -133,7 +133,6 @@ module WashOutHelper
       xml.tag! "xsd:complexContent" do
         xml.tag! "xsd:restriction", base: "soap-enc:Array" do
           xml.tag! "xsd:attribute", {"name" => "item",
-                                     "maxOccurs" => 'unbounded',
                                      "wsdl:type" => "tns:#{param.basic_type}[]"}
         end
       end
