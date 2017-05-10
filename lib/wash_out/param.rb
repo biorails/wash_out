@@ -14,9 +14,9 @@ module WashOut
     def initialize(soap_config, name, type, multiplied = false)
       type ||= {}
       @soap_config = soap_config || WashOut::SoapConfig.new({})
-      @name       = name.to_s
-      @raw_name   = name.to_s
-      @map        = {}
+      @name = name.to_s
+      @raw_name = name.to_s
+      @map = {}
       @multiplied = multiplied
 
       if soap_config.camelize_wsdl.to_s == 'lower'
@@ -28,12 +28,12 @@ module WashOut
       if type.is_a?(Symbol)
         @type = type.to_s
       elsif type.is_a?(Class)
-        @type         = 'struct'
-        @map          = self.class.parse_def(soap_config, type.wash_out_param_map)
+        @type = 'struct'
+        @map = self.class.parse_def(soap_config, type.wash_out_param_map)
         @source_class = type
       else
         @type = 'struct'
-        @map  = self.class.parse_def(soap_config, type)
+        @map = self.class.parse_def(soap_config, type)
       end
     end
 
@@ -62,24 +62,34 @@ module WashOut
         end
       else
         operation = case type
-          when 'string';       :to_s
-          when 'integer';      :to_i
-          when 'long';         :to_i
-          when 'double';       :to_f
-          when 'boolean';      lambda{|dat| dat === "0" ? false : !!dat}
-          when 'date';         :to_date
-          when 'datetime';     :to_datetime
-          when 'time';         :to_time
-          when 'base64Binary'; lambda{|dat| Base64.decode64(dat)}
-          else raise RuntimeError, "Invalid WashOut simple type: #{type}"
-        end
+                      when 'string';
+                        :to_s
+                      when 'integer';
+                        :to_i
+                      when 'long';
+                        :to_i
+                      when 'double';
+                        :to_f
+                      when 'boolean';
+                        lambda { |dat| dat === "0" ? false : !!dat }
+                      when 'date';
+                        :to_date
+                      when 'datetime';
+                        :to_datetime
+                      when 'time';
+                        :to_time
+                      when 'base64Binary';
+                        lambda { |dat| Base64.decode64(dat) }
+                      else
+                        raise RuntimeError, "Invalid WashOut simple type: #{type}"
+                    end
 
         begin
           if data.nil?
             data
           elsif @multiplied
-            return data.map{|x| x.send(operation)} if operation.is_a?(Symbol)
-            return data.map{|x| operation.call(x)} if operation.is_a?(Proc)
+            return data.map { |x| x.send(operation) } if operation.is_a?(Symbol)
+            return data.map { |x| operation.call(x) } if operation.is_a?(Proc)
           elsif operation.is_a? Symbol
             data.send(operation)
           else
@@ -102,15 +112,29 @@ module WashOut
 
     def basic_type
       return name unless classified?
-      return source_class.wash_out_param_name(@soap_config)
+      return source_class_name
+    end
+
+    def source_class_name
+      text = if @soap_config.ruby_namespace =='strip'
+               source_class.to_s.underscore.split("/").last
+             elsif @soap_config.ruby_namespace =='convert'
+               source_class.to_s.underscore.gsub '/', '.'
+             elsif @soap_config.ruby_namespace =='flatten'
+               source_class.to_s.underscore.gsub '/', '_'
+             else
+               source_class.to_s
+             end
+      text = if @soap_config.camelize_wsdl
+               struct? ? text.camelize : text.camelize(:lower)
+             else
+               text
+             end
+      text
     end
 
     def array_type
-      if soap_config.camelize_wsdl
-        "#{basic_type}Array"
-      else
-        "#{basic_type}_array"
-      end
+      @soap_config.camelize_wsdl ? "#{basic_type}Array" : "#{basic_type}_array"
     end
 
     def xsd_type
@@ -149,7 +173,7 @@ module WashOut
       end
 
       if [Array, Symbol].include?(definition.class)
-        definition = { :value => definition }
+        definition = {:value => definition}
       end
 
       if definition.is_a? Hash
@@ -191,7 +215,7 @@ module WashOut
         raise WashOut::Dispatcher::SOAPError, "SOAP message structure is broken"
       end
 
-      data   = data.with_indifferent_access
+      data = data.with_indifferent_access
       struct = {}.with_indifferent_access
 
       # RUBY18 Enumerable#each_with_object is better, but 1.9 only.

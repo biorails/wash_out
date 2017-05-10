@@ -17,9 +17,6 @@ module WashOut
     def self.wash_out_param_name(soap_config = nil)
       soap_config ||= WashOut::SoapConfig.new({})
       @param_type_name ||= name.underscore.gsub '/', '.'
-      if soap_config.flatten_ruby_namespace
-        @param_type_name = @param_type_name.split(".").last
-      end
       if soap_config.camelize_wsdl.to_s == 'lower'
         @param_type_name = @param_type_name.camelize(:lower)
       elsif soap_config.camelize_wsdl

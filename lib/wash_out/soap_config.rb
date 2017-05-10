@@ -10,8 +10,8 @@ module WashOut
       namespace: 'urn:WashOut',
       wsdl_style: 'rpc',
       snakecase_input: false,
-      camelize_wsdl: false,
-      flatten_ruby_namespace: false,
+      camelize_wsdl: false,        # Struct  XxxYy parameters xxxYy
+      ruby_namespace: "strip",     # strip/flatten/convert ruby namespace into wdsl
       dot_net_arrays: true,
       catch_xml_errors: false,
       wsse_username: nil,

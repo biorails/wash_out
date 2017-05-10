@@ -105,7 +105,7 @@ describe WashOut do
     it "defines arrays" do
       x = xml[:definitions][:types][:schema][:complex_type]
       expect(x).not_to be_nil  # "missing complex type"
-      x = x.select{ |x|x[:'@name'] == 'tns:Center_array'}
+      x = x.select{ |x|x[:'@name'] == 'CenterArray'}
       expect(x).not_to be_nil  # "missing 'tns:Center_array' "
       x = x.first[:complex_content]
       expect(x).not_to be_nil  # "missing complex type "
