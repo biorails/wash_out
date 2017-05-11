@@ -78,6 +78,14 @@ module WashOutHelper
     end
   end
 
+  def  wsdl_parameter(param)
+    if param.multiplied
+        {:name => param.name, :type => param.array_type}
+     else
+        wsdl_occurence(param, false, :name => param.name, :type => param.namespaced_type)
+    end
+  end
+
   private
   #
   # .Net soap helper type for array of type
@@ -132,8 +140,8 @@ module WashOutHelper
     xml.tag! "xsd:complexType", :name => param.array_type do
       xml.tag! "xsd:complexContent" do
         xml.tag! "xsd:restriction", base: "soap-enc:Array" do
-          xml.tag! "xsd:attribute", {"name" => "item",
-                                     "wsdl:type" => "tns:#{param.basic_type}[]"}
+          xml.tag! "xsd:attribute", {"ref" => "soap-enc:arrayType",
+                                     "wsdl:arrayType" => "tns:#{param.basic_type}[]"}
         end
       end
     end
