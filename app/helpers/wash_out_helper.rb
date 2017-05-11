@@ -33,7 +33,7 @@ module WashOutHelper
 
       if param.struct?
         if param.multiplied
-          xml.tag! "#{param.array_type}" do
+          xml.tag! tag_name,"tns:arrayType" => param.array_instance_type, "xsi:type"=> "tns:Array"  do
 
             param.map.each do |p|
               attrs = wsdl_data_attrs p
@@ -41,7 +41,7 @@ module WashOutHelper
                 blk = proc { wsdl_data(xml, p.map) }
               end
               attrs.reject! { |_, v| v.nil? }
-              xml.tag! tag_name, param_options.merge(attrs), &blk #todo add array level object
+              xml.tag! "item", param_options.merge(attrs), &blk #todo add array level object
             end
           end
         else
@@ -52,9 +52,9 @@ module WashOutHelper
       else
         if param.multiplied
           param.value = [] unless param.value.is_a?(Array)
-          xml.tag! "#{param.name}_array" do
+          xml.tag! tag_name,"tns:arrayType" => param.array_instance_type, "xsi:type"=> "tns:Array" do
             param.value.each do |v|
-              xml.tag! tag_name, v, param_options
+              xml.tag! "item", v, param_options
             end
           end
         else

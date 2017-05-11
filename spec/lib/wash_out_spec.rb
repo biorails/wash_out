@@ -505,7 +505,7 @@ describe WashOut do
             end
           end
 
-          expect(savon(:rocknroll)[:rocknroll_response]).to eq( { :my_value_array => nil } )
+          expect(savon(:rocknroll)[:rocknroll_response]).to eq( :my_value=>{:"@tns:array_type"=>"xsd:int[0]", :"@xsi:type"=>"tns:Array"} )
         end
 
         it "respond with complext definition" do

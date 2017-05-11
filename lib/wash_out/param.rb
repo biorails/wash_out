@@ -137,6 +137,11 @@ module WashOut
       @soap_config.camelize_wsdl ? "#{basic_type}Array" : "#{basic_type}_array"
     end
 
+    def array_instance_type
+      value.is_a?(Array)
+      "#{namespaced_type}[#{value.is_a?(Array) ? value.size : 0}]"
+    end
+
     def xsd_type
       return 'int' if type.to_s == 'integer'
       return 'dateTime' if type.to_s == 'datetime'
