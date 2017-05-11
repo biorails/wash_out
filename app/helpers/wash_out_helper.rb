@@ -110,7 +110,7 @@ module WashOutHelper
         xml.tag! "xsd:sequence" do
           elems.each do |value|
             if value.multiplied
-              wsdl_array_of(xml, param)
+              wsdl_array_of(xml, value)
             else
               xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
             end
