@@ -45,12 +45,13 @@ module WashOut
       end
 
       data = data[key]
-      data = [data] if @multiplied && !data.is_a?(Array)
 
       if struct?
         data ||= {}
-        if @multiplied
-          data.map do |x|
+        if @multiplied and data[:item]
+          list = data[:item]
+          list = list.is_a?(Array) ? list: [list]
+          list.map do |x|
             map_struct x do |param, dat, elem|
               param.load(dat, elem)
             end
@@ -125,21 +126,16 @@ module WashOut
              else
                source_class.to_s
              end
-      text = if @soap_config.camelize_wsdl
-               struct? ? text.camelize : text.camelize(:lower)
-             else
-               text
-             end
-      text
+      struct? ? text.camelize : text.camelize(:lower)
     end
 
     def array_type
-      @soap_config.camelize_wsdl ? "#{basic_type}Array" : "#{basic_type}_array"
+      "#{basic_type}Array"
     end
 
     def array_instance_type
-      value.is_a?(Array)
-      "#{namespaced_type}[#{value.is_a?(Array) ? value.size : 0}]"
+      n = map.is_a?(Array) ? map.size : (value.is_a?(Array) ?  value.size : 0)
+      "tns:#{basic_type}[#{n.to_i}]"
     end
 
     def xsd_type

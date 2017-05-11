@@ -41,7 +41,7 @@ module WashOutHelper
                 blk = proc { wsdl_data(xml, p.map) }
               end
               attrs.reject! { |_, v| v.nil? }
-              xml.tag! "item", param_options.merge(attrs), &blk #todo add array level object
+              xml.tag! "item", &blk #todo add array level object
             end
           end
         else
@@ -54,7 +54,7 @@ module WashOutHelper
           param.value = [] unless param.value.is_a?(Array)
           xml.tag! tag_name,"tns:arrayType" => param.array_instance_type, "xsi:type"=> "tns:Array" do
             param.value.each do |v|
-              xml.tag! "item", v, param_options
+              xml.tag! "item", v
             end
           end
         else
@@ -82,7 +82,7 @@ module WashOutHelper
     if param.multiplied
         {:name => param.name, :type => param.namespaced_type}
      else
-        wsdl_occurence(param, false, :name => param.name, :type => param.namespaced_type)
+        wsdl_occurence(param, true, :name => param.name, :type => param.namespaced_type)
     end
   end
 
@@ -112,13 +112,13 @@ module WashOutHelper
             if value.multiplied
               wsdl_array_of(xml, value)
             else
-              xml.tag! "xsd:element", wsdl_occurence(value, false, :name => value.name, :type => value.namespaced_type)
+              xml.tag! "xsd:element", wsdl_occurence(value, true, :name => value.name, :type => value.namespaced_type)
             end
           end
         end
       end
       attrs.each do |value|
-        xml.tag! "xsd:attribute", wsdl_occurence(value, false, :name => value.attr_name, :type => value.namespaced_type)
+        xml.tag! "xsd:attribute", wsdl_occurence(value, true, :name => value.attr_name, :type => value.namespaced_type)
       end
     end
     more.each do |p|
