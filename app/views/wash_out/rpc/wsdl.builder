@@ -22,12 +22,12 @@ xml.definitions 'xmlns' => 'http://schemas.xmlsoap.org/wsdl/',
   @map.each do |operation, formats|
     xml.message :name => "#{operation}" do
       formats[:in].each do |p|
-        xml.part  wsdl_parameter(param)
+        xml.part  wsdl_parameter(p)
       end
     end
     xml.message :name => formats[:response_tag] do
       formats[:out].each do |p|
-        xml.part  wsdl_parameter(param)
+        xml.part  wsdl_parameter(p)
       end
     end
   end

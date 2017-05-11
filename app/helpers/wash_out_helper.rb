@@ -33,7 +33,7 @@ module WashOutHelper
 
       if param.struct?
         if param.multiplied
-          xml.tag! "#{param.name}_array" do
+          xml.tag! "#{param.array_type}" do
 
             param.map.each do |p|
               attrs = wsdl_data_attrs p
@@ -80,7 +80,7 @@ module WashOutHelper
 
   def  wsdl_parameter(param)
     if param.multiplied
-        {:name => param.name, :type => param.array_type}
+        {:name => param.name, :type => param.namespaced_type}
      else
         wsdl_occurence(param, false, :name => param.name, :type => param.namespaced_type)
     end
@@ -91,7 +91,7 @@ module WashOutHelper
   # .Net soap helper type for array of type
   #
   def wsdl_array_of(xml, param)
-    xml.tag! "xsd:element", :nillable => 'true', :name => param.name, :type =>  param.array_type
+    xml.tag! "xsd:element", :name => param.name, :type =>  param.namespaced_type
   end
 
   def wsdl_basic_type(xml, param, defined)
@@ -148,7 +148,7 @@ module WashOutHelper
   end
 
   def wsdl_occurence(param, inject, extend_with = {})
-    data = {"#{'xsi:' if inject}nillable" => 'true'}
+    data = {}  #{"#{'xsi:' if inject}nillable" => 'true'}
     if param.multiplied
       data["#{'xsi:' if inject}minOccurs"] = 0
       data["#{'xsi:' if inject}maxOccurs"] = 'unbounded'
