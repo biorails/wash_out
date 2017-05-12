@@ -33,15 +33,18 @@ module WashOutHelper
 
       if param.struct?
         if param.multiplied
-          xml.tag! tag_name,"tns:arrayType" => param.array_instance_type, "xsi:type"=> "tns:Array"  do
-
-            param.map.each do |p|
-              attrs = wsdl_data_attrs p
-              if p.is_a?(Array) || p.map.size > attrs.size
-                blk = proc { wsdl_data(xml, p.map) }
+          if param.map.size == 0
+            # skip
+          else
+            xml.tag! tag_name, "soap-enc:arrayType" => param.array_instance_type, "xsi:type" => "soap-enc:Array" do
+              param.map.each do |p|
+                attrs = wsdl_data_attrs p
+                if p.is_a?(Array) || p.map.size > attrs.size
+                  blk = proc { wsdl_data(xml, p.map) }
+                end
+                attrs.reject! { |_, v| v.nil? }
+                xml.tag! "item", &blk #todo add array level object
               end
-              attrs.reject! { |_, v| v.nil? }
-              xml.tag! "item", &blk #todo add array level object
             end
           end
         else
@@ -52,13 +55,13 @@ module WashOutHelper
       else
         if param.multiplied
           param.value = [] unless param.value.is_a?(Array)
-          xml.tag! tag_name,"tns:arrayType" => param.array_instance_type, "xsi:type"=> "tns:Array" do
+          xml.tag! tag_name, "soap-enc:arrayType" => param.array_instance_type, "xsi:type" => "soap-enc:Array" do
             param.value.each do |v|
               xml.tag! "item", v
             end
           end
         else
-          xml.tag! tag_name, param.value, param_options
+          xml.tag! tag_name, param.string_value, param_options
         end
       end
     end
@@ -78,21 +81,16 @@ module WashOutHelper
     end
   end
 
-  def  wsdl_parameter(param)
-    if param.multiplied
-        {:name => param.name, :type => param.namespaced_type}
-     else
-        wsdl_occurence(param, true, :name => param.name, :type => param.namespaced_type)
+  def wsdl_parameter(param)
+    if param.multiplied && param.struct?
+      {:name => param.name, :type => param.namespaced_type}
+    else
+      wsdl_occurence(param, true, :name => param.name, :type => param.namespaced_type)
     end
   end
 
   private
-  #
-  # .Net soap helper type for array of type
-  #
-  def wsdl_array_of(xml, param)
-    xml.tag! "xsd:element", :name => param.name, :type =>  param.namespaced_type
-  end
+
 
   def wsdl_basic_type(xml, param, defined)
     more = []
@@ -126,15 +124,16 @@ module WashOutHelper
     end
   end
 
-=begin
-<xsd:complexType name="SoapApi..BiorailsRequestServiceArray">
- <xsd:complexContent>
-  <xsd:restriction base="soapenc:Array">
-   <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="typens:SoapApi..BiorailsRequestService[]"/>
-  </xsd:restriction>
- </xsd:complexContent>
-</xsd:complexType>
-=end
+  #
+  # .Net soap helper type for array of type
+  #
+  def wsdl_array_of(xml, param)
+    if param.struct?
+      xml.tag! "xsd:element", :name => param.name, :type => param.namespaced_type
+    else
+      xml.tag! "xsd:element", wsdl_occurence(param, true, :name => param.name, :type => param.namespaced_type)
+    end
+  end
 
   def wsdl_array_type(xml, param)
     xml.tag! "xsd:complexType", :name => param.array_type do
@@ -146,6 +145,7 @@ module WashOutHelper
       end
     end
   end
+
 
   def wsdl_occurence(param, inject, extend_with = {})
     data = {"#{'xsi:' if inject}nillable" => 'true'}

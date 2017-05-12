@@ -111,6 +111,15 @@ module WashOut
       list.is_a?(Array) ? list : [list]
     end
 
+    def string_value
+      case value
+        when Time,DateTime,Date
+          value.iso8601
+        else
+          value.to_s
+      end
+    end
+
 
     # Checks if this Param defines a complex type.
     def struct?
