@@ -104,7 +104,7 @@ module WashOut
 
     def array_load(data)
       list = if @soap_config[:dot_net_arrays]
-               data.is_a?(Hash) ? data['item'] : []
+               data.is_a?(Hash) ? data['Item'] : []
              else
                data.empty? ? data : []
              end

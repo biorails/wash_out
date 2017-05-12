@@ -43,7 +43,7 @@ module WashOutHelper
                   blk = proc { wsdl_data(xml, p.map) }
                 end
                 attrs.reject! { |_, v| v.nil? }
-                xml.tag! "item", &blk #todo add array level object
+                xml.tag! "Item", &blk #todo add array level object
               end
             end
           end
@@ -57,7 +57,7 @@ module WashOutHelper
           param.value = [] unless param.value.is_a?(Array)
           xml.tag! tag_name, "soap-enc:arrayType" => param.array_instance_type, "xsi:type" => "soap-enc:Array" do
             param.value.each do |v|
-              xml.tag! "item", v
+              xml.tag! "Item", v
             end
           end
         else
