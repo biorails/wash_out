@@ -104,7 +104,7 @@ module WashOut
 
     def array_load(data)
       list = if @soap_config[:dot_net_arrays]
-               data.is_a?(Hash) ? data['Item'] : []
+               data.is_a?(Hash) ? data[:Item] : []
              else
                data.empty? ? data : []
              end
@@ -131,9 +131,15 @@ module WashOut
     end
 
     def basic_type
-      return name unless classified?
-      return source_class_name
+      if classified?
+        source_class_name
+      elsif struct?
+        name
+      else
+        type
+      end
     end
+
 
     def source_class_name
       text = if @soap_config.ruby_namespace =='strip'
@@ -165,7 +171,19 @@ module WashOut
 
     # Returns a WSDL namespaced identifier for this type.
     def namespaced_type
-      struct? ? (@multiplied ? "tns:#{array_type}" : "tns:#{basic_type}") : "xsd:#{xsd_type}"
+      if struct?
+        (@multiplied ? "tns:#{array_type}" : "tns:#{basic_type}")
+      else
+        (@multiplied ? "tns:#{array_type}" : "xsd:#{xsd_type}")
+      end
+    end
+
+    def namespaced_basic_type
+      if struct?
+        "tns:#{basic_type}"
+      else
+        "xsd:#{xsd_type}"
+      end
     end
 
     # Parses a +definition+. The format of the definition is best described

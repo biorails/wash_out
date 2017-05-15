@@ -78,11 +78,16 @@ module WashOutHelper
       elsif !param.classified?
         raise RuntimeError, "Duplicate use of `#{param.basic_type}` type name. Consider using classified types."
       end
+    elsif param.multiplied
+      if !defined.include?(param.basic_type)
+        wsdl_array_type(xml, param)
+        defined << param.basic_type
+      end
     end
   end
 
   def wsdl_parameter(param)
-    if param.multiplied && param.struct?
+    if param.multiplied
       {:name => param.name, :type => param.namespaced_type}
     else
       wsdl_occurence(param, true, :name => param.name, :type => param.namespaced_type)
@@ -140,7 +145,8 @@ module WashOutHelper
       xml.tag! "xsd:complexContent" do
         xml.tag! "xsd:restriction", base: "soap-enc:Array" do
           xml.tag! "xsd:attribute", {"ref" => "soap-enc:arrayType",
-                                     "wsdl:arrayType" => "tns:#{param.basic_type}[]"}
+                                     "wsdl:arrayType" => "#{param.namespaced_basic_type}[]"}
+
         end
       end
     end
