@@ -1,3 +1,3 @@
 module WashOut
-  VERSION = "0.11.0.biorails.26"
+  VERSION = "0.11.0.biorails.28"
 end
