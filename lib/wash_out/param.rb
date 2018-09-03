@@ -45,12 +45,12 @@ module WashOut
       end
 
       data = data[key]
-      data = [data] if @multiplied && !data.is_a?(Array)
 
       if struct?
         data ||= {}
         if @multiplied
-          data.map do |x|
+          list = array_load(data)
+          list.map do |x|
             map_struct x do |param, dat, elem|
               param.load(dat, elem)
             end
@@ -88,8 +88,9 @@ module WashOut
           if data.nil?
             data
           elsif @multiplied
-            return data.map { |x| x.send(operation) } if operation.is_a?(Symbol)
-            return data.map { |x| operation.call(x) } if operation.is_a?(Proc)
+            list = array_load(data)
+            return list.map { |x| x.send(operation) } if operation.is_a?(Symbol)
+            return list.map { |x| operation.call(x) } if operation.is_a?(Proc)
           elsif operation.is_a? Symbol
             data.send(operation)
           else
@@ -101,6 +102,28 @@ module WashOut
       end
     end
 
+    def array_load(data)
+      if data.is_a?(Hash) && data[:Item]
+        data[:Item]
+      elsif data.is_a?(Array)
+        data
+      elsif data.blank?
+        []
+      else
+        [data]
+      end
+    end
+
+    def string_value
+      case value
+        when Time, DateTime, Date
+          value.iso8601
+        else
+          value.to_s
+      end
+    end
+
+
     # Checks if this Param defines a complex type.
     def struct?
       type == 'struct'
@@ -111,9 +134,15 @@ module WashOut
     end
 
     def basic_type
-      return name unless classified?
-      return source_class_name
+      if classified?
+        source_class_name
+      elsif struct?
+        name
+      else
+        type
+      end
     end
+
 
     def source_class_name
       text = if @soap_config.ruby_namespace =='strip'
@@ -125,21 +154,20 @@ module WashOut
              else
                source_class.to_s
              end
-      text = if @soap_config.camelize_wsdl
-               struct? ? text.camelize : text.camelize(:lower)
-             else
-               text
-             end
-      text
+      struct? ? text.camelize : text.camelize(:lower)
     end
 
     def array_type
-      @soap_config.camelize_wsdl ? "#{basic_type}Array" : "#{basic_type}_array"
+      "#{basic_type}Array"
     end
 
     def array_instance_type
-      value.is_a?(Array)
-      "#{namespaced_type}[#{value.is_a?(Array) ? value.size : 0}]"
+      n = map.is_a?(Array) ? map.size : (value.is_a?(Array) ? value.size : 0)
+      "#{array_instance_type_namespace}:#{basic_type}[#{n.to_i}]"
+    end
+
+    def array_instance_type_namespace
+      value.nil? ? 'tns' : 'xsd'
     end
 
     def xsd_type
@@ -150,7 +178,19 @@ module WashOut
 
     # Returns a WSDL namespaced identifier for this type.
     def namespaced_type
-      struct? ? (@multiplied ? "tns:#{array_type}" : "tns:#{basic_type}") : "xsd:#{xsd_type}"
+      if struct?
+        (@multiplied ? "tns:#{array_type}" : "tns:#{basic_type}")
+      else
+        (@multiplied ? "tns:#{array_type}" : "xsd:#{xsd_type}")
+      end
+    end
+
+    def namespaced_basic_type
+      if struct?
+        "tns:#{basic_type}"
+      else
+        "xsd:#{xsd_type}"
+      end
     end
 
     # Parses a +definition+. The format of the definition is best described
