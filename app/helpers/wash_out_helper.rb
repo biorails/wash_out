@@ -79,9 +79,9 @@ module WashOutHelper
         raise RuntimeError, "Duplicate use of `#{param.basic_type}` type name. Consider using classified types."
       end
     elsif param.multiplied
-      if !defined.include?(param.array_type)
+      if !defined.include?(param.basic_type)
         wsdl_array_type(xml, param)
-        defined << param.array_type
+        defined << param.basic_type
       end
     end
   end

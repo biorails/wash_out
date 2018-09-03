@@ -103,20 +103,17 @@ module WashOut
     end
 
     def array_load(data)
-      if data.is_a?(Hash) && data[:Item]
-        data[:Item]
-      elsif data.is_a?(Array)
-        data
-      elsif data.blank?
-        []
-      else
-        [data]
-      end
+      list = if @soap_config[:dot_net_arrays]
+               data.is_a?(Hash) ? data[:Item] : []
+             else
+               data.empty? ? data : []
+             end
+      list.is_a?(Array) ? list : [list]
     end
 
     def string_value
       case value
-        when Time, DateTime, Date
+        when Time,DateTime,Date
           value.iso8601
         else
           value.to_s
@@ -143,7 +140,6 @@ module WashOut
       end
     end
 
-
     def source_class_name
       text = if @soap_config.ruby_namespace =='strip'
                source_class.to_s.underscore.split("/").last
@@ -163,11 +159,7 @@ module WashOut
 
     def array_instance_type
       n = map.is_a?(Array) ? map.size : (value.is_a?(Array) ? value.size : 0)
-      "#{array_instance_type_namespace}:#{basic_type}[#{n.to_i}]"
-    end
-
-    def array_instance_type_namespace
-      value.nil? ? 'tns' : 'xsd'
+      "tns:#{basic_type}[#{n.to_i}]"
     end
 
     def xsd_type
