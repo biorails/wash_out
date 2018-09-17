@@ -50,6 +50,7 @@ module WashOut
         data ||= {}
         if @multiplied
           list = array_load(data)
+          list = [list] if list.is_a?(Hash)
           list.map do |x|
             map_struct x do |param, dat, elem|
               param.load(dat, elem)
