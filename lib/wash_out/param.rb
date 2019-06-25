@@ -90,6 +90,7 @@ module WashOut
             data
           elsif @multiplied
             list = array_load(data)
+            list = [list] unless list.kind_of?(Array)
             return list.map { |x| x.send(operation) } if operation.is_a?(Symbol)
             return list.map { |x| operation.call(x) } if operation.is_a?(Proc)
           elsif operation.is_a? Symbol
