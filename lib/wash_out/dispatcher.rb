@@ -7,13 +7,18 @@ module WashOut
     # response.
     class SOAPError < Exception
       attr_accessor :code
-      def initialize(message, code=nil)
+      attr_accessor :detail
+      attr_accessor :actor
+      def initialize(message, options={})
         super(message)
-        @code = code
+        options ||= {}
+        @code = options[:code] || 'Server'
+        @detail = options[:detail]
+        @actor = options[:actor]
       end
     end
 
-    class ProgrammerError < Exception; end
+    class ProgrammerError < SOAPError; end
 
     def _authenticate_wsse
       begin

@@ -79,9 +79,9 @@ module WashOutHelper
         raise RuntimeError, "Duplicate use of `#{param.basic_type}` type name. Consider using classified types."
       end
     elsif param.multiplied
-      if !defined.include?(param.basic_type)
+      if !defined.include?(param.array_type)
         wsdl_array_type(xml, param)
-        defined << param.basic_type
+        defined << param.array_type
       end
     end
   end
@@ -102,7 +102,7 @@ module WashOutHelper
     xml.tag! "xsd:complexType", :name => param.basic_type do
       attrs, elems = [], []
       param.map.each do |value|
-        more << value if value.struct?
+        more << value if value.struct? || value.multiplied
         if value.attribute?
           attrs << value
         else
@@ -132,6 +132,14 @@ module WashOutHelper
   #
   # .Net soap helper type for array of type
   #
+  # <xsd:complexType name="SoapApi..BiorailsRequestServiceArray">
+  #  <xsd:complexContent>
+  #   <xsd:restriction base="soapenc:Array">
+  #    <xsd:attribute ref="soapenc:arrayType" wsdl:arrayType="typens:SoapApi..BiorailsRequestService[]"/>
+  #   </xsd:restriction>
+  #  </xsd:complexContent>
+  # </xsd:complexType>
+
   def wsdl_array_of(xml, param)
     if param.struct?
       xml.tag! "xsd:element", :name => param.name, :type => param.namespaced_type
