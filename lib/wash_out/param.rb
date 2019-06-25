@@ -50,6 +50,7 @@ module WashOut
         data ||= {}
         if @multiplied
           list = array_load(data)
+          list = [list] if list.is_a?(Hash)
           list.map do |x|
             map_struct x do |param, dat, elem|
               param.load(dat, elem)
@@ -89,6 +90,7 @@ module WashOut
             data
           elsif @multiplied
             list = array_load(data)
+            list = [list] unless list.kind_of?(Array)
             return list.map { |x| x.send(operation) } if operation.is_a?(Symbol)
             return list.map { |x| operation.call(x) } if operation.is_a?(Proc)
           elsif operation.is_a? Symbol
