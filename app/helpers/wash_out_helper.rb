@@ -25,23 +25,37 @@ module WashOutHelper
     end
   end
 
+  def wsdl_data_ary(params)
+    {
+      'soap-enc:arrayType': "#{param.namespaced_type}[#{param.map.length}]",
+      'xsi:type': 'soap-enc:Array'
+    }
+  end
+
   def wsdl_data(xml, params)
     params.each do |param|
       next if param.attribute?
 
       tag_name = param.name
-      param_options = wsdl_data_options(param)
-      param_options.merge! wsdl_data_attrs(param)
+
+      if param.multiplied
+        param_options = wsdl_data_ary(param)
+      else
+        param_options = wsdl_data_options(param)
+        param_options.merge! wsdl_data_attrs(param)
+      end
 
       if param.struct?
         if param.multiplied
-          param.map.each do |p|
-            attrs = wsdl_data_attrs p
-            if p.is_a?(Array) || p.map.size > attrs.size
-              blk = proc { wsdl_data(xml, p.map) }
+          xml.tag! tag_name, param_options do
+            param.map.each do |p|
+              attrs = wsdl_data_attrs p
+              if p.is_a?(Array) || p.map.size > attrs.size
+                blk = proc { wsdl_data(xml, p.map) }
+              end
+              attrs.reject! { |_, v| v.nil? }
+              xml.tag! 'Item', &blk
             end
-            attrs.reject! { |_, v| v.nil? }
-            xml.tag! tag_name, param_options.merge(attrs), &blk
           end
         else
           xml.tag! tag_name, param_options do
