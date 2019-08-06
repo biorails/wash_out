@@ -104,6 +104,15 @@ module WashOutHelper
           end
         end
 
+        xml.tag! "xsd:complexType", :name => "#{param.basic_type}Array" do
+          xml.tag! "xsd:complexContent" do
+            xml.tag! "xsd:restriction", :base => "soap-enc:Array" do
+              xml.tag! "xsd:attribute", :ref => "soap-enc:arrayType",
+                       "wsdl:arrayType" => "tns:#{param.basic_type}[]"
+            end
+          end
+        end
+
         defined << param.basic_type
       elsif !param.classified?
         raise RuntimeError, "Duplicate use of `#{param.basic_type}` type name. Consider using classified types."
